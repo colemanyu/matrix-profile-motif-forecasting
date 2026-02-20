@@ -69,24 +69,6 @@
   # Kill all
   $ tmux kill-server
 ```
-
-### MISC
-```
-# List all users
-# https://unix.stackexchange.com/questions/617652/how-can-i-list-all-currently-logged-in-users
-$ ps -eo user,uid | awk 'NR>1 && $2 >= 1000 && ++seen[$2]==1{print $1}'
-
-# Check Current Tasks
-$ top
-# Press M to sort by Memory usage or P to sort by CPU usage.
-# Pree q to exit.
-
-# Check GPU information
-$ nvidia-smi
-
-# Check # CPU
-$ nproc
-```
 - environment
 ```
 $ conda install -c conda-forge matplotlib -y
