@@ -57,9 +57,9 @@
 
 Figure 
 - Figure 2: [plot_visualize_matrix_profile.ipynb](python/plot_visualize_matrix_profile.ipynb)
-- Figures 3, 4: [plot_visualize_matrix_profile.ipynb](python/plot_visualize_matrix_profile.ipynb)
-- Figures 5, 6: [plot_visualize_matrix_profile.ipynb](python/plot_visualize_matrix_profile.ipynb)
-- 
+- Figures 3, 4: [plot_no_of_points_after_NN.ipynb](python/plot_no_of_points_after_NN.ipynb)
+- Figure 5: [plot_original_vs_normalize.ipynb](python/plot_original_vs_normalize.ipynb)
+- Figure 6: [plot_raw_vs_pairwise.ipynb](python/plot_raw_vs_pairwise.ipynb)
 
 Tables
 - Tables 6 - 9: [results/](results/)
