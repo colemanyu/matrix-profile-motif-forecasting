@@ -66,6 +66,7 @@ Tables
 
 ## Resources
 
+- [XGBoost](https://xgboost.ai/) (Gradient Boosted Regression Tree (GBRT))
 - [stumpy](https://stumpy.readthedocs.io/en/latest/) (Matrix Profile)
 
 ## References
