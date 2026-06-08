@@ -59,7 +59,8 @@ def _extract_motif_data_numba(
                 # Extract 'l' points after the nearest neighbor
                 for ll in range(l):
                     tgt_idx = neighbor_end + ll  # tgt_idx: target index
-                    if tgt_idx < n:
+                    # if tgt_idx < n:
+                    if (tgt_idx < n) and (tgt_idx <= i):
                         if compute_trend:
                             top_1_after[i, ll] = T[tgt_idx] - T[tgt_idx - 1]
                         else:
