@@ -295,7 +295,7 @@ def get_top_k_motifs_numba(T, m, k=1, l=1, include_itself=False):
             for i in valid_indices:
                 idx_neighbor = int(idxs[i])
                 target = idx_neighbor + m + ll
-                if target < len(T):
+                if (target < len(T)) and (target <= i):
                     col_vals[i] = T[target]
 
             data[col_name] = col_vals
