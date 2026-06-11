@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import stumpy
-from stumpy import config, core
+from stumpy import config, core, config
 import re
 import warnings
 from joblib import Parallel, delayed
@@ -74,7 +74,7 @@ def _extract_motif_data_numba(
     return top_1_idx, top_1_dist, top_1_delta, top_1_after, top_1_before
 
 
-def get_top_1_motif_numba(T, m, l=1, compute_trend=False, include_itself=False):
+def get_top_1_motif_numba(T, m, l=1, compute_trend=False, include_itself=False, EXCL_ZONE_DENOM=4):
 
     # Convert Pandas Series to Numpy if needed
     if isinstance(T, pd.Series):
@@ -82,6 +82,7 @@ def get_top_1_motif_numba(T, m, l=1, compute_trend=False, include_itself=False):
     # Ensure Float64 for Numba compatibility
     T = T.astype(np.float64)
 
+    config.STUMPY_EXCL_ZONE_DENOM = EXCL_ZONE_DENOM
     mp = stumpy.stump(T, m=m, ignore_trivial=True)
 
     if include_itself:
