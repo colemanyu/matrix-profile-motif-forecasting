@@ -56,6 +56,23 @@ echo "For pemds7..."
 #     --k_motifs 2 3 \
 #     --no_points_after_motif 9 \
 #     --include_similarity True
+
+echo "Starting Grid Search: pemds7, EXCL_ZONE_DENOM sweep..."
+python grid_search_pemds7.py \
+    --include_covariates True False \
+    --include_motif_information 1 \
+    --no_points_after_motif 9 \
+    --include_similarity True False \
+    --EXCL_ZONE_DENOM 4 1 0.1 0.01 0.005 0.003 0.0025 0.002 0.001 0.0005
+#   Ratio 0.25 1 10 100 200 300 400 500 1000 2000
+
+echo "Starting Grid Search: pemds7, motif_length (m) sweep..."
+python grid_search_pemds7.py \
+    --include_covariates True False \
+    --include_motif_information 1 \
+    --no_points_after_motif 9 \
+    --include_similarity True False \
+    --motif_length 4 9 18 36 72 144 288 576 1152 2304 4608
 # ==========================================================
 
 echo "All grid searches completed successfully."
