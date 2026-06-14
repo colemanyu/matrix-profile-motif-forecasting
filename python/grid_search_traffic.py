@@ -39,7 +39,9 @@ def New_preprocessing(
     k_motifs,
     no_points_after_motif,
     do_normalization=False,
-    include_similarity=False
+    include_similarity=False,
+    EXCL_ZONE_DENOM=4,
+    m=9,
 ):
     Data = []
     # Change 1
@@ -81,13 +83,14 @@ def New_preprocessing(
         if 1 <= include_motif_information <=12 :
             df_motif = get_top_1_motif_numba(
                     TimeSeries,
-                    num_periods_input,
+                    m,
                     l=no_points_after_motif,
                     include_itself=include_itself,
-                    compute_trend=(include_motif_information == 2 or include_motif_information == 4 or include_motif_information == 6 or include_motif_information == 8 or include_motif_information == 10 or include_motif_information == 12)
+                    compute_trend=(include_motif_information == 2 or include_motif_information == 4 or include_motif_information == 6 or include_motif_information == 8 or include_motif_information == 10 or include_motif_information == 12),
+                    EXCL_ZONE_DENOM=EXCL_ZONE_DENOM,
                 )
         else:
-            df_motif = get_top_k_motifs_numba(TimeSeries, num_periods_input, k_motifs, l=no_points_after_motif, include_itself=include_itself)
+            df_motif = get_top_k_motifs_numba(TimeSeries, m, k_motifs, l=no_points_after_motif, include_itself=include_itself)
         df_motif_points_after = df_motif[[c for c in df_motif.columns if ("point_after" in c)]]
         if do_normalization:
             df_motif_points_after = df_motif_points_after.sub(df_motif_points_after.mean(axis=1), axis=0).div(df_motif_points_after.std(axis=1, ddof=0), axis=0) # Use Population Standard Deviation (ddof=0)
@@ -112,7 +115,7 @@ def New_preprocessing(
                 col_name = f"top_{current_k}_motif_idx"
                 current_idx_col = df_motif[[col_name]]
                 
-                last_point_idx = current_idx_col + num_periods_input - 1
+                last_point_idx = current_idx_col + m - 1
                 
                 # Retrieve time features, handling NaNs in last_point_idx
                 idx_values = last_point_idx.values.flatten()
@@ -163,8 +166,7 @@ def New_preprocessing(
     next = 0
     x_batches = []
     y_batches = []
-    limit = max(num_periods_input, num_periods_output)
-    while next + limit < end:
+    while start + num_periods_input + num_periods_output <= end:
         next = start + num_periods_input
         x_batches.append(Train[start:next, :])
         y_batches.append(Train[next : next + num_periods_output, 0])
@@ -179,7 +181,7 @@ def New_preprocessing(
     next_test = 0
     x_testbatches = []
     y_testbatches = []
-    while next_test + limit < end_test:
+    while start_test + num_periods_input + num_periods_output <= end_test:
         next_test = start_test + num_periods_input
         x_testbatches.append(Test[start_test:next_test, :])
         y_testbatches.append(Test[next_test : next_test + num_periods_output, 0])
@@ -208,10 +210,12 @@ def run_grid_search(
     param_include_itself,
     param_include_motif_information,
     param_k_motifs,
+    param_motif_length,
     param_no_points_after_motif,
     param_do_normalization,
     param_include_similarity,
     param_no_time_series,
+    param_EXCL_ZONE_DENOM=[4],
 ):
     # --- Warmup Run ---
     print("Performing Numba warmup (ignoring time)...")
@@ -264,9 +268,11 @@ def run_grid_search(
             param_include_itself,
             param_include_motif_information,
             param_k_motifs,
+            param_motif_length,
             param_no_points_after_motif,
             param_do_normalization,
             param_include_similarity,
+            param_EXCL_ZONE_DENOM,
         )
     )
 
@@ -278,13 +284,15 @@ def run_grid_search(
         include_itself,
         include_motif_information,
         k_motifs,
+        motif_length,
         no_points_after_motif,
         do_normalization,
         include_similarity,
+        EXCL_ZONE_DENOM,
     ) in enumerate(combinations):
         start_time = time.time()
         print(
-            f"[{idx+1}/{total_combinations}] Running: include_covariates={include_covariates}, include_itself={include_itself}, include_motif_information={include_motif_information}, k_motifs={k_motifs}, no_points_after_motif={no_points_after_motif}, do_normalization={do_normalization}, include_similarity={include_similarity}"
+            f"[{idx+1}/{total_combinations}] Running: include_covariates={include_covariates}, include_itself={include_itself}, include_motif_information={include_motif_information}, k_motifs={k_motifs}, motif_length={motif_length}, no_points_after_motif={no_points_after_motif}, do_normalization={do_normalization}, include_similarity={include_similarity}, EXCL_ZONE_DENOM={EXCL_ZONE_DENOM}"
         )
         # Reset seeds to ensure each run is independent (fresh start)
         random.seed(42)
@@ -313,7 +321,9 @@ def run_grid_search(
                 k_motifs,
                 no_points_after_motif,
                 do_normalization,
-                include_similarity
+                include_similarity,
+                EXCL_ZONE_DENOM,
+                motif_length,
             )
             for element1 in x_batches:
                 x_batches_Full.append(element1)
@@ -344,9 +354,11 @@ def run_grid_search(
             "include_itself": include_itself,
             "include_motif_information": include_motif_information,
             "k_motifs": k_motifs,
+            "motif_length": motif_length,
             "no_points_after_motif": no_points_after_motif,
             "do_normalization": do_normalization,
             "include_similarity": include_similarity,
+            "EXCL_ZONE_DENOM": EXCL_ZONE_DENOM,
             "RMSE": rmse,
             "WAPE": wape,
             "MAE": mae,
@@ -367,6 +379,8 @@ def run_grid_search(
         + str(param_include_motif_information)
         + "_"
         + str(param_k_motifs)
+        + "_"
+        + str(param_motif_length)
         + "_"
         + str(param_no_points_after_motif)
         + "_"
@@ -392,6 +406,8 @@ if __name__ == "__main__":
                         help="List of integers for motif information types")
     parser.add_argument("--k_motifs", nargs='+', type=int, default=[1], 
                         help="List of integers for k motifs")
+    parser.add_argument("--motif_length", nargs='+', type=int, default=[24],
+                        help="List of integers for motif length (m), independent of num_periods_input")
     parser.add_argument("--no_points_after_motif", nargs='+', type=int, default=[1], 
                         help="List of integers for points after motif")
     parser.add_argument("--do_normalization", nargs='+', type=str2bool, default=[False], 
@@ -400,6 +416,8 @@ if __name__ == "__main__":
                         help="List of booleans for include_similarity")
     parser.add_argument("--no_time_series", nargs='+', type=int, default=[-1], 
                         help="List of integers for number of time series")
+    parser.add_argument("--EXCL_ZONE_DENOM", nargs='+', type=float, default=[4], 
+                        help="List of floats for exclusion zone denominator")
 
     args = parser.parse_args()
     print("Starting grid search...")
@@ -409,8 +427,10 @@ if __name__ == "__main__":
         param_include_itself=args.include_itself,
         param_include_motif_information=args.include_motif_information,
         param_k_motifs=args.k_motifs,
+        param_motif_length=args.motif_length,
         param_no_points_after_motif=args.no_points_after_motif,
         param_do_normalization=args.do_normalization,
         param_include_similarity=args.include_similarity,
-        param_no_time_series=args.no_time_series
+        param_no_time_series=args.no_time_series,
+        param_EXCL_ZONE_DENOM=args.EXCL_ZONE_DENOM
     )

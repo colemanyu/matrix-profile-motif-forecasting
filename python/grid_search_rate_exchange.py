@@ -1,12 +1,13 @@
 # # Using GPU
 # import os
 # # Must be set before importing libraries that use the GPU!
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" 
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "6" # Example: Only expose the RTX 5880 (Index 6)
 
 import pandas as pd
 import numpy as np
 import random
+
 random.seed(42)
 from datetime import datetime, timedelta
 from sklearn import preprocessing
@@ -18,16 +19,18 @@ import argparse  # Added for command line arguments
 
 import time
 
+
 # Helper function to convert string inputs to booleans
 def str2bool(v):
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+    if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+    elif v.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
 
 def New_preprocessing(
     TimeSeries,
@@ -39,7 +42,9 @@ def New_preprocessing(
     k_motifs,
     no_points_after_motif,
     do_normalization=False,
-    include_similarity=False
+    include_similarity=False,
+    EXCL_ZONE_DENOM=4,
+    m=9,
 ):
     Data = []
     # Change 1
@@ -67,68 +72,132 @@ def New_preprocessing(
     #################################################################################################
     if include_motif_information:
         # include_motif_information: 1:12; Odds: raw values; Evens: trend values
-        if 1 <= include_motif_information <=12 :
+        if 1 <= include_motif_information <= 12:
             df_motif = get_top_1_motif_numba(
-                    TimeSeries,
-                    num_periods_input,
-                    l=no_points_after_motif,
-                    include_itself=include_itself,
-                    compute_trend=(include_motif_information == 2 or include_motif_information == 4 or include_motif_information == 6 or include_motif_information == 8 or include_motif_information == 10 or include_motif_information == 12)
-                )
+                TimeSeries,
+                m,
+                l=no_points_after_motif,
+                include_itself=include_itself,
+                compute_trend=(
+                    include_motif_information == 2
+                    or include_motif_information == 4
+                    or include_motif_information == 6
+                    or include_motif_information == 8
+                    or include_motif_information == 10
+                    or include_motif_information == 12
+                ),
+                EXCL_ZONE_DENOM=EXCL_ZONE_DENOM,
+            )
         else:
-            df_motif = get_top_k_motifs_numba(TimeSeries, num_periods_input, k_motifs, l=no_points_after_motif, include_itself=include_itself)
-        df_motif_points_after = df_motif[[c for c in df_motif.columns if ("point_after" in c)]]
+            df_motif = get_top_k_motifs_numba(
+                TimeSeries,
+                m,
+                k_motifs,
+                l=no_points_after_motif,
+                include_itself=include_itself,
+            )
+        df_motif_points_after = df_motif[
+            [c for c in df_motif.columns if ("point_after" in c)]
+        ]
         if do_normalization:
-            df_motif_points_after = df_motif_points_after.sub(df_motif_points_after.mean(axis=1), axis=0).div(df_motif_points_after.std(axis=1, ddof=0), axis=0) # Use Population Standard Deviation (ddof=0)
-            df_motif_points_after = df_motif_points_after.replace([np.inf, -np.inf], np.nan)
-        Normalized_Data_df = pd.concat([Normalized_Data_df, df_motif_points_after], axis=1)
+            df_motif_points_after = df_motif_points_after.sub(
+                df_motif_points_after.mean(axis=1), axis=0
+            ).div(
+                df_motif_points_after.std(axis=1, ddof=0), axis=0
+            )  # Use Population Standard Deviation (ddof=0)
+            df_motif_points_after = df_motif_points_after.replace(
+                [np.inf, -np.inf], np.nan
+            )
+        Normalized_Data_df = pd.concat(
+            [Normalized_Data_df, df_motif_points_after], axis=1
+        )
         # Add motif points before
-        if include_motif_information in [3, 4, 5, 6, 9, 10, 11, 12, 15 ,17, 21, 23]: # No 7, 8
-            df_motif_points_before = df_motif[[c for c in df_motif.columns if ("point_before" in c)]]
+        if include_motif_information in [
+            3,
+            4,
+            5,
+            6,
+            9,
+            10,
+            11,
+            12,
+            15,
+            17,
+            21,
+            23,
+        ]:  # No 7, 8
+            df_motif_points_before = df_motif[
+                [c for c in df_motif.columns if ("point_before" in c)]
+            ]
             if do_normalization:
-                df_motif_points_before = df_motif_points_before.sub(df_motif_points_before.mean(axis=1), axis=0).div(df_motif_points_before.std(axis=1, ddof=0), axis=0) # Use Population Standard Deviation (ddof=0)
-                df_motif_points_before = df_motif_points_before.replace([np.inf, -np.inf], np.nan)
+                df_motif_points_before = df_motif_points_before.sub(
+                    df_motif_points_before.mean(axis=1), axis=0
+                ).div(
+                    df_motif_points_before.std(axis=1, ddof=0), axis=0
+                )  # Use Population Standard Deviation (ddof=0)
+                df_motif_points_before = df_motif_points_before.replace(
+                    [np.inf, -np.inf], np.nan
+                )
             if include_motif_information in [3, 4, 9, 10, 15, 21]:
                 # print("df_motif_points_before shape before slicing:", df_motif_points_before.shape)
-                df_motif_points_before = df_motif_points_before.iloc[:, -1:]  # only last point
+                df_motif_points_before = df_motif_points_before.iloc[
+                    :, -1:
+                ]  # only last point
                 # print("df_motif_points_before shape after slicing:", df_motif_points_before.shape)
             else:
                 pass  # all y points
-            Normalized_Data_df = pd.concat([Normalized_Data_df, df_motif_points_before], axis=1)
-        if (7 <= include_motif_information <= 12) or (include_motif_information in [19, 21, 23]):
+            Normalized_Data_df = pd.concat(
+                [Normalized_Data_df, df_motif_points_before], axis=1
+            )
+        if (7 <= include_motif_information <= 12) or (
+            include_motif_information in [19, 21, 23]
+        ):
             current_k = 1
             while f"top_{current_k}_motif_idx" in df_motif.columns:
                 col_name = f"top_{current_k}_motif_idx"
                 current_idx_col = df_motif[[col_name]]
-                
-                last_point_idx = current_idx_col + num_periods_input - 1
-                
+
+                last_point_idx = current_idx_col + m - 1
+
                 # Retrieve time features, handling NaNs in last_point_idx
                 idx_values = last_point_idx.values.flatten()
                 valid_mask = np.isfinite(idx_values)
-                
+
                 # Create container filled with NaNs
-                motif_time_features = np.full((len(idx_values), New_sub.shape[1]), np.nan)
-                
+                motif_time_features = np.full(
+                    (len(idx_values), New_sub.shape[1]), np.nan
+                )
+
                 if np.any(valid_mask):
                     valid_indices = idx_values[valid_mask].astype(int)
                     motif_time_features[valid_mask] = New_sub[valid_indices]
 
                 suffix = "" if current_k == 1 else f"_{current_k}"
-                
-                motif_feat_df = pd.DataFrame(motif_time_features, columns=[
-                    f"month_motif{suffix}", f"day_motif{suffix}",
-                    f"day_of_week_motif{suffix}", f"day_of_year_motif{suffix}", f"week_of_year_motif{suffix}"
-                ])
-                Normalized_Data_df = pd.concat([Normalized_Data_df, motif_feat_df], axis=1)
-                
-                current_k += 1
 
+                motif_feat_df = pd.DataFrame(
+                    motif_time_features,
+                    columns=[
+                        f"month_motif{suffix}",
+                        f"day_motif{suffix}",
+                        f"day_of_week_motif{suffix}",
+                        f"day_of_year_motif{suffix}",
+                        f"week_of_year_motif{suffix}",
+                    ],
+                )
+                Normalized_Data_df = pd.concat(
+                    [Normalized_Data_df, motif_feat_df], axis=1
+                )
+
+                current_k += 1
 
         if include_similarity:
             df_motif_dist = df_motif[[c for c in df_motif.columns if ("dist" in c)]]
             # print("Shape of df_motif_dist before normalization:", df_motif_dist.shape)
-            df_motif_dist = pd.DataFrame(preprocessing.minmax_scale(df_motif_dist, feature_range=(-0.5, 0.5)), columns=df_motif_dist.columns, index=df_motif_dist.index)
+            df_motif_dist = pd.DataFrame(
+                preprocessing.minmax_scale(df_motif_dist, feature_range=(-0.5, 0.5)),
+                columns=df_motif_dist.columns,
+                index=df_motif_dist.index,
+            )
             # print("Shape of df_motif_dist after normalization:", df_motif_dist.shape)
             Normalized_Data_df = pd.concat([Normalized_Data_df, df_motif_dist], axis=1)
 
@@ -161,8 +230,7 @@ def New_preprocessing(
     next = 0
     x_batches = []
     y_batches = []
-    limit = max(num_periods_input, num_periods_output)
-    while next + limit < end:
+    while start + num_periods_input + num_periods_output <= end:
         next = start + num_periods_input
         x_batches.append(Train[start:next, :])
         y_batches.append(Train[next : next + num_periods_output, 0])
@@ -177,7 +245,7 @@ def New_preprocessing(
     next_test = 0
     x_testbatches = []
     y_testbatches = []
-    while next_test + limit < end_test:
+    while start_test + num_periods_input + num_periods_output <= end_test:
         next_test = start_test + num_periods_input
         x_testbatches.append(Test[start_test:next_test, :])
         y_testbatches.append(Test[next_test : next_test + num_periods_output, 0])
@@ -192,24 +260,25 @@ def New_preprocessing(
     elif include_covariates and (not include_motif_information):
         pass
     elif (not include_covariates) and include_motif_information:
-        selected_cols = np.r_[
-            0, len(headers) : Normalized_Data_df.shape[1]
-        ]
+        selected_cols = np.r_[0, len(headers) : Normalized_Data_df.shape[1]]
         x_batches = x_batches[:, :, selected_cols]
         x_testbatches = x_testbatches[:, :, selected_cols]
-    else: # (not include_covariates) and (not include_motif_information)
+    else:  # (not include_covariates) and (not include_motif_information)
         pass
     return x_batches, y_batches, x_testbatches, y_testbatches
+
 
 def run_grid_search(
     param_include_covariates,
     param_include_itself,
     param_include_motif_information,
     param_k_motifs,
+    param_motif_length,
     param_no_points_after_motif,
     param_do_normalization,
     param_include_similarity,
     param_no_time_series,
+    param_EXCL_ZONE_DENOM=[4],
 ):
     # --- Warmup Run ---
     print("Performing Numba warmup (ignoring time)...")
@@ -219,7 +288,7 @@ def run_grid_search(
     # Change 3
     #################################################################################################
     file_name = "exchange_rate.txt"
-    file_name_prefix = file_name.split('.')[0]
+    file_name_prefix = file_name.split(".")[0]
     data_path = r"../data/" + file_name
     data = pd.read_csv(data_path, sep=",", header=None)
     data = pd.DataFrame(data)
@@ -248,7 +317,7 @@ def run_grid_search(
         "colsample_bytree": 0.97,
         "scale_pos_weight": 1,
         "random_state": 42,
-        "verbosity": 1, # 0=Silent, 1=Warning, 2=Info, 3=Debug
+        "verbosity": 1,  # 0=Silent, 1=Warning, 2=Info, 3=Debug
         # # For GPU acceleration
         # "device": "cuda:0",  # Uses the first GPU
         # "tree_method": "hist" # Required for modern GPU acceleration
@@ -263,9 +332,11 @@ def run_grid_search(
             param_include_itself,
             param_include_motif_information,
             param_k_motifs,
+            param_motif_length,
             param_no_points_after_motif,
             param_do_normalization,
             param_include_similarity,
+            param_EXCL_ZONE_DENOM,
         )
     )
 
@@ -277,18 +348,19 @@ def run_grid_search(
         include_itself,
         include_motif_information,
         k_motifs,
+        motif_length,
         no_points_after_motif,
         do_normalization,
         include_similarity,
+        EXCL_ZONE_DENOM,
     ) in enumerate(combinations):
         start_time = time.time()
         print(
-            f"[{idx+1}/{total_combinations}] Running: include_covariates={include_covariates}, include_itself={include_itself}, include_motif_information={include_motif_information}, k_motifs={k_motifs}, no_points_after_motif={no_points_after_motif}, do_normalization={do_normalization}, include_similarity={include_similarity}"
+            f"[{idx+1}/{total_combinations}] Running: include_covariates={include_covariates}, include_itself={include_itself}, include_motif_information={include_motif_information}, k_motifs={k_motifs}, motif_length={motif_length}, no_points_after_motif={no_points_after_motif}, do_normalization={do_normalization}, include_similarity={include_similarity}, EXCL_ZONE_DENOM={EXCL_ZONE_DENOM}"
         )
         # Reset seeds to ensure each run is independent (fresh start)
         random.seed(42)
         np.random.seed(42)
-
 
         # =================== Processing Time Series ===================
         x_batches_Full = []
@@ -312,7 +384,9 @@ def run_grid_search(
                 k_motifs,
                 no_points_after_motif,
                 do_normalization,
-                include_similarity
+                include_similarity,
+                EXCL_ZONE_DENOM,
+                motif_length,
             )
             for element1 in x_batches:
                 x_batches_Full.append(element1)
@@ -338,27 +412,33 @@ def run_grid_search(
         )
         end_time = time.time()
         # print(f"Total execution time: {end_time - start_time:.2f} seconds")
-        results.append({
-            "include_covariates": include_covariates,
-            "include_itself": include_itself,
-            "include_motif_information": include_motif_information,
-            "k_motifs": k_motifs,
-            "no_points_after_motif": no_points_after_motif,
-            "do_normalization": do_normalization,
-            "include_similarity": include_similarity,
-            "RMSE": rmse,
-            "WAPE": wape,
-            "MAE": mae,
-            "MAPE": mape,
-            "Time_Processing": end_time_matrix_profile - start_time,
-            "Time_Overall": end_time - start_time
-        })
+        results.append(
+            {
+                "include_covariates": include_covariates,
+                "include_itself": include_itself,
+                "include_motif_information": include_motif_information,
+                "k_motifs": k_motifs,
+                "motif_length": motif_length,
+                "no_points_after_motif": no_points_after_motif,
+                "do_normalization": do_normalization,
+                "include_similarity": include_similarity,
+                "EXCL_ZONE_DENOM": EXCL_ZONE_DENOM,
+                "RMSE": rmse,
+                "WAPE": wape,
+                "MAE": mae,
+                "MAPE": mape,
+                "Time_Processing": end_time_matrix_profile - start_time,
+                "Time_Overall": end_time - start_time,
+            }
+        )
 
     # ======= Save results =======
     df_results = pd.DataFrame(results)
-    
+
     output_file = (
-        "../results/grid_search_"+file_name_prefix+"_results_"
+        "../results/grid_search_"
+        + file_name_prefix
+        + "_results_"
         + str(param_include_covariates)
         + "_"
         + str(include_itself)
@@ -366,6 +446,8 @@ def run_grid_search(
         + str(param_include_motif_information)
         + "_"
         + str(param_k_motifs)
+        + "_"
+        + str(param_motif_length)
         + "_"
         + str(param_no_points_after_motif)
         + "_"
@@ -378,27 +460,82 @@ def run_grid_search(
     # ======= End of Save results =======
     print(f"Grid search completed. Results saved to {output_file}")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Grid Search")
 
     # Accepting lists of arguments using nargs='+'
     # type=str2bool ensures 'True'/'False' strings are converted to booleans
-    parser.add_argument("--include_covariates", nargs='+', type=str2bool, default=[True, False], 
-                        help="List of booleans for include_covariates")
-    parser.add_argument("--include_itself", nargs='+', type=str2bool, default=[True], 
-                        help="List of booleans for include_itself")
-    parser.add_argument("--include_motif_information", nargs='+', type=int, default=[0], 
-                        help="List of integers for motif information types")
-    parser.add_argument("--k_motifs", nargs='+', type=int, default=[1], 
-                        help="List of integers for k motifs")
-    parser.add_argument("--no_points_after_motif", nargs='+', type=int, default=[1], 
-                        help="List of integers for points after motif")
-    parser.add_argument("--do_normalization", nargs='+', type=str2bool, default=[False], 
-                        help="List of booleans for do_normalization")
-    parser.add_argument("--include_similarity", nargs='+', type=str2bool, default=[False], 
-                        help="List of booleans for include_similarity")
-    parser.add_argument("--no_time_series", nargs='+', type=int, default=[-1], 
-                        help="List of integers for number of time series")
+    parser.add_argument(
+        "--include_covariates",
+        nargs="+",
+        type=str2bool,
+        default=[True, False],
+        help="List of booleans for include_covariates",
+    )
+    parser.add_argument(
+        "--include_itself",
+        nargs="+",
+        type=str2bool,
+        default=[True],
+        help="List of booleans for include_itself",
+    )
+    parser.add_argument(
+        "--include_motif_information",
+        nargs="+",
+        type=int,
+        default=[0],
+        help="List of integers for motif information types",
+    )
+    parser.add_argument(
+        "--k_motifs",
+        nargs="+",
+        type=int,
+        default=[1],
+        help="List of integers for k motifs",
+    )
+    parser.add_argument(
+        "--motif_length",
+        nargs="+",
+        type=int,
+        default=[24],
+        help="List of integers for motif length (m), independent of num_periods_input",
+    )
+    parser.add_argument(
+        "--no_points_after_motif",
+        nargs="+",
+        type=int,
+        default=[1],
+        help="List of integers for points after motif",
+    )
+    parser.add_argument(
+        "--do_normalization",
+        nargs="+",
+        type=str2bool,
+        default=[False],
+        help="List of booleans for do_normalization",
+    )
+    parser.add_argument(
+        "--include_similarity",
+        nargs="+",
+        type=str2bool,
+        default=[False],
+        help="List of booleans for include_similarity",
+    )
+    parser.add_argument(
+        "--no_time_series",
+        nargs="+",
+        type=int,
+        default=[-1],
+        help="List of integers for number of time series",
+    )
+    parser.add_argument(
+        "--EXCL_ZONE_DENOM",
+        nargs="+",
+        type=float,
+        default=[4],
+        help="List of floats for exclusion zone denominator",
+    )
 
     args = parser.parse_args()
     print("Starting grid search...")
@@ -408,8 +545,10 @@ if __name__ == "__main__":
         param_include_itself=args.include_itself,
         param_include_motif_information=args.include_motif_information,
         param_k_motifs=args.k_motifs,
+        param_motif_length=args.motif_length,
         param_no_points_after_motif=args.no_points_after_motif,
         param_do_normalization=args.do_normalization,
         param_include_similarity=args.include_similarity,
-        param_no_time_series=args.no_time_series
+        param_no_time_series=args.no_time_series,
+        param_EXCL_ZONE_DENOM=args.EXCL_ZONE_DENOM,
     )
