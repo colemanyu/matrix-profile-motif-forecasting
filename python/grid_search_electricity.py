@@ -454,6 +454,8 @@ def run_grid_search(
         + str(param_do_normalization)
         + "_"
         + str(param_include_similarity)
+        + "_"
+        + str(param_EXCL_ZONE_DENOM)
         + ".csv"
     )
     df_results.to_csv(output_file, index=False)
