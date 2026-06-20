@@ -40,6 +40,54 @@ echo "For electricity..."
 #     --no_points_after_motif 24 \
 #     --include_similarity True False
 
+# echo "Starting Grid Search: electricity, include_motif_information=13"
+# python grid_search_electricity.py \
+#     --include_covariates True False \
+#     --include_motif_information 13 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: electricity, include_motif_information=15"
+# python grid_search_electricity.py \
+#     --include_covariates True False \
+#     --include_motif_information 15 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: electricity, include_motif_information=17"
+# python grid_search_electricity.py \
+#     --include_covariates True False \
+#     --include_motif_information 17 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: electricity, include_motif_information=19"
+# python grid_search_electricity.py \
+#     --include_covariates True \
+#     --include_motif_information 19 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: electricity, include_motif_information=21"
+# python grid_search_electricity.py \
+#     --include_covariates True \
+#     --include_motif_information 21 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: electricity, include_motif_information=23"
+# python grid_search_electricity.py \
+#     --include_covariates True \
+#     --include_motif_information 23 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
 # echo "Starting Grid Search: electricity, EXCL_ZONE_DENOM sweep..."
 # python grid_search_electricity.py \
 # 	--include_covariates True False \
@@ -92,6 +140,54 @@ echo "For traffic..."
 #     --include_motif_information 7 9 11 \
 #     --no_points_after_motif 24 \
 #     --include_similarity True False
+
+# echo "Starting Grid Search: traffic, include_motif_information=13"
+# python grid_search_traffic.py \
+#     --include_covariates True False \
+#     --include_motif_information 13 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: traffic, include_motif_information=15"
+# python grid_search_traffic.py \
+#     --include_covariates True False \
+#     --include_motif_information 15 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: traffic, include_motif_information=17"
+# python grid_search_traffic.py \
+#     --include_covariates True False \
+#     --include_motif_information 17 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: traffic, include_motif_information=19"
+# python grid_search_traffic.py \
+#     --include_covariates True \
+#     --include_motif_information 19 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: traffic, include_motif_information=21"
+# python grid_search_traffic.py \
+#     --include_covariates True \
+#     --include_motif_information 21 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: traffic, include_motif_information=23"
+# python grid_search_traffic.py \
+#     --include_covariates True \
+#     --include_motif_information 23 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 24 \
+#     --include_similarity True
 
 # echo "Starting Grid Search: traffic, EXCL_ZONE_DENOM sweep..."
 # python grid_search_traffic.py \
@@ -146,6 +242,55 @@ echo "For pemds7..."
 #     --no_points_after_motif 9 \
 #     --include_similarity True False
 
+# echo "Starting Grid Search: pemds7, include_motif_information=13, 15, 17"
+# python grid_search_pemds7.py \
+#     --include_covariates True False \
+#     --include_motif_information 13 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 9 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: pemds7, include_motif_information=13, 15, 17"
+# python grid_search_pemds7.py \
+#     --include_covariates True False \
+#     --include_motif_information 15 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 9 \
+#     --include_similarity True
+
+
+# echo "Starting Grid Search: pemds7, include_motif_information=13, 15, 17"
+# python grid_search_pemds7.py \
+#     --include_covariates True False \
+#     --include_motif_information 17 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 9 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: pemds7, include_motif_information=19, 21, 23"
+# python grid_search_pemds7.py \
+#     --include_covariates True \
+#     --include_motif_information 19 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 9 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: pemds7, include_motif_information=19, 21, 23"
+# python grid_search_pemds7.py \
+#     --include_covariates True \
+#     --include_motif_information 21 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 9 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: pemds7, include_motif_information=19, 21, 23"
+# python grid_search_pemds7.py \
+#     --include_covariates True \
+#     --include_motif_information 23 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 9 \
+#     --include_similarity True
+
 # echo "Starting Grid Search: pemds7, EXCL_ZONE_DENOM sweep..."
 # python grid_search_pemds7.py \
 # 	--include_covariates True False \
@@ -198,6 +343,54 @@ echo "For exchange_rate..."
 #     --include_motif_information 7 9 11 \
 #     --no_points_after_motif 6 \
 #     --include_similarity True False
+
+# echo "Starting Grid Search: rate_exchange, include_motif_information=13, 15, 17"
+# python grid_search_exchange_rate.py \
+#     --include_covariates True False \
+#     --include_motif_information 13 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 6 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: rate_exchange, include_motif_information=13, 15, 17"
+# python grid_search_exchange_rate.py \
+#     --include_covariates True False \
+#     --include_motif_information 15 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 6 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: rate_exchange, include_motif_information=13, 15, 17"
+# python grid_search_exchange_rate.py \
+#     --include_covariates True False \
+#     --include_motif_information 17 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 6 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: rate_exchange, include_motif_information=19, 21, 23"
+# python grid_search_exchange_rate.py \
+#     --include_covariates True \
+#     --include_motif_information 19 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 6 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: rate_exchange, include_motif_information=19, 21, 23"
+# python grid_search_exchange_rate.py \
+#     --include_covariates True \
+#     --include_motif_information 21 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 6 \
+#     --include_similarity True
+
+# echo "Starting Grid Search: rate_exchange, include_motif_information=19, 21, 23"
+# python grid_search_exchange_rate.py \
+#     --include_covariates True \
+#     --include_motif_information 23 \
+#     --k_motifs 2 3 \
+#     --no_points_after_motif 6 \
+#     --include_similarity True
 
 # echo "Starting Grid Search: exchange_rate, EXCL_ZONE_DENOM sweep..."
 # python grid_search_exchange_rate.py \
