@@ -62,7 +62,9 @@ Figure
 - Figure 6: [plot_raw_vs_pairwise.ipynb](python/plot_raw_vs_pairwise.ipynb)
 
 Tables
-- Tables 6 - 9: [results/](results/)
+- Tables 4 - 5: [0-base/](results/0-base/)
+- Table 6: [1-nnc/](results/1-nnc/)
+- Table 7 - 9: [2-k-nn/](results/2-k-nn/)
 
 ## Resources
 
